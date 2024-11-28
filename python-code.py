@@ -4,8 +4,17 @@ import numpy as np
 import cvlib as cv
 from cvlib.object_detection import draw_bbox
 import concurrent.futures
+from plyer import notification  # For desktop notifications
 
 url = 'http://192.168.148.79/cam-hi.jpg'
+
+# Function to send a desktop notification
+def send_notification(detected_object):
+    notification.notify(
+        title="Object Detected!",
+        message=f"A {detected_object} has been detected.",
+        timeout=5  # Notification duration in seconds
+    )
 
 def run1():
     try:
@@ -40,9 +49,11 @@ def run2():
                 bbox, label, conf = cv.detect_common_objects(im)
                 im = draw_bbox(im, bbox, label, conf)
 
-                # Display the names of detected objects
+                # Check for a specific object (e.g., 'cat')
                 for l, c in zip(label, conf):
                     print(f"Detected: {l} (Confidence: {c:.2f})")
+                    if l == 'car' and c > 0.6:  # Threshold confidence for detection
+                        send_notification('Car detected in no parking area!')  # Send a notification if a cat is detected
 
                 cv2.imshow('Object Detection', im)
             except Exception as e:
@@ -56,7 +67,7 @@ def run2():
     finally:
         cv2.destroyAllWindows()
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     print("Starting...")
     with concurrent.futures.ThreadPoolExecutor() as executor:
         executor.submit(run1)
